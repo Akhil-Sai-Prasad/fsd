@@ -4,11 +4,11 @@ FSD is the source Flutter app in the customer handoff demo. It fetches a custome
 
 ## What This App Does
 
-- Fetches customer details from `https://jsonplaceholder.typicode.com/users/1`.
-- Falls back to mock customer data when the network endpoint is unavailable.
-- Stores the last fetched customer and the saved customer list in MMKV.
+- Fetches customer details from a random `https://jsonplaceholder.typicode.com/users/{id}` endpoint, where `id` is between 1 and 10.
+- Falls back to dynamically generated mock customer data when the network endpoint is unavailable.
+- Stores customers in MMKV only when the user taps `Store Customers`.
 - Opens QT with the current customer record.
-- Opens LT with all saved customer records plus the current customer record.
+- Opens LT with the saved customer records.
 
 ## App Links
 
@@ -25,7 +25,7 @@ The Android manifest includes package visibility queries for `qtapp` and `ltapp`
 
 - `lib/screens/home_screen.dart` - fetch, store, and "Go to QT/LT" actions.
 - `lib/services/api_service.dart` - demo API call and fallback payload.
-- `lib/services/storage_service.dart` - MMKV persistence for last fetched and saved customers.
+- `lib/services/storage_service.dart` - MMKV persistence for saved customers.
 - `lib/models/customer.dart` - customer JSON model.
 - `android/app/src/main/AndroidManifest.xml` - Android package visibility config.
 
@@ -64,7 +64,7 @@ adb install -r build/app/outputs/apk/debug/app-debug.apk
 3. Tap `Fetch Customer Details`.
 4. Tap `Store Customers` for each customer you want LT to receive later.
 5. Tap `Go to QT` to send the current customer to QT.
-6. Tap `Go to LT` to send all saved customers and the current customer to LT.
+6. Tap `Go to LT` to send saved customers to LT.
 
 ## Verification Commands
 

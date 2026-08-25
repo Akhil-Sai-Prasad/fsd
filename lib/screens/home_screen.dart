@@ -29,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final customer = await ApiService.instance.fetchCustomerDetails();
-      StorageService.instance.saveLastFetchedCustomer(customer);
       setState(() {
         _customer = customer;
         _isLoading = false;
@@ -73,13 +72,16 @@ class _HomeScreenState extends State<HomeScreen> {
     if (customer == null) return;
 
     final savedCustomers = StorageService.instance.getStoredCustomers();
-    final customersById = {
-      for (final savedCustomer in savedCustomers) savedCustomer.id: savedCustomer,
-      customer.id: customer,
-    };
+    if (savedCustomers.isEmpty) {
+      _showSnackBar(
+        'Store at least one customer before opening LT.',
+        isError: true,
+      );
+      return;
+    }
 
     final jsonString = jsonEncode(
-      customersById.values.map((c) => c.toJson()).toList(),
+      savedCustomers.map((c) => c.toJson()).toList(),
     );
     final encodedData = Uri.encodeComponent(jsonString);
     final uri = Uri.parse('ltapp://customers?data=$encodedData');

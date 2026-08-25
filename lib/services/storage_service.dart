@@ -11,7 +11,6 @@ class StorageService {
   static final StorageService instance = StorageService._();
 
   static const String _customersKey = 'stored_customers';
-  static const String _lastFetchedKey = 'last_fetched_customer';
 
   MMKV get _kv => MMKV.defaultMMKV();
 
@@ -38,22 +37,7 @@ class StorageService {
     }
   }
 
-  void saveLastFetchedCustomer(Customer customer) {
-    _kv.encodeString(_lastFetchedKey, jsonEncode(customer.toJson()));
-  }
-
-  Customer? getLastFetchedCustomer() {
-    final raw = _kv.decodeString(_lastFetchedKey);
-    if (raw == null || raw.isEmpty) return null;
-    try {
-      return Customer.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-    } catch (_) {
-      return null;
-    }
-  }
-
   void clearAll() {
     _kv.removeValue(_customersKey);
-    _kv.removeValue(_lastFetchedKey);
   }
 }
