@@ -72,9 +72,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final customer = _customer;
     if (customer == null) return;
 
-    final jsonString = jsonEncode(customer.toJson());
+    final savedCustomers = StorageService.instance.getStoredCustomers();
+    final customersById = {
+      for (final savedCustomer in savedCustomers) savedCustomer.id: savedCustomer,
+      customer.id: customer,
+    };
+
+    final jsonString = jsonEncode(
+      customersById.values.map((c) => c.toJson()).toList(),
+    );
     final encodedData = Uri.encodeComponent(jsonString);
-    final uri = Uri.parse('ltapp://customer?data=$encodedData');
+    final uri = Uri.parse('ltapp://customers?data=$encodedData');
 
     try {
       final launched = await launchUrl(
@@ -142,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Fetch a customer record from the backend, then '
-                        'forward it to the QT app via a deep link or '
+                        'forward it to the QT/LT app via a deep link or '
                         'persist it locally with MMKV.',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
