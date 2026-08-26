@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:http/http.dart' as http;
-
-import '../models/customer.dart';
+import 'package:shared_store/shared_store.dart';
 
 /// Simulates a backend API call that returns customer details.
 ///

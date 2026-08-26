@@ -1,4 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Gate for the shared store. `signature` means only apps signed with the
+         same certificate as FSD can reach the provider. Declared identically in
+         QT and LT so that install order cannot leave a consumer without it. -->
+    <permission
+        android:name="com.techmirus.sharedstore.permission.ACCESS"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="com.techmirus.sharedstore.permission.ACCESS" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="fsd"
         android:name="${applicationName}"
@@ -25,6 +34,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- FSD owns the suite's shared key/value store; QT and LT are clients. -->
+        <provider
+            android:name=".SharedStoreProvider"
+            android:authorities="com.techmirus.sharedstore.provider"
+            android:exported="true"
+            android:permission="com.techmirus.sharedstore.permission.ACCESS" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

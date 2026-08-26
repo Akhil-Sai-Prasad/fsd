@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mmkv/mmkv.dart';
 
 import 'screens/home_screen.dart';
 import 'widgets/connectivity_banner.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // MMKV must finish initialization before any encode/decode calls occur.
-  await MMKV.initialize();
-
+void main() {
+  // No storage bootstrap needed: the store lives behind SharedStoreProvider,
+  // which Android brings up with the process.
   runApp(const FsdApp());
 }
 

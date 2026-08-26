@@ -1,11 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:shared_store/shared_store.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../models/customer.dart';
 import '../services/api_service.dart';
-import '../services/storage_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,11 +26,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final customer = await ApiService.instance.fetchCustomerDetails();
+
+      // Auto-save: a freshly fetched record goes straight into the shared
+      // store, so QT and LT can read it without it ever travelling in a URL.
+      await CustomerStore.upsert(customer);
+
+      if (!mounted) return;
       setState(() {
         _customer = customer;
         _isLoading = false;
+        _wasStored = true;
+      });
+      _showSnackBar('Customer fetched and saved to the shared store.');
+    } on SharedStoreException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Fetched, but could not write to the shared store: '
+            '${e.message}';
+        _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Failed to fetch customer details. Please try again.';
         _isLoading = false;
@@ -45,9 +58,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final customer = _customer;
     if (customer == null) return;
 
-    final jsonString = jsonEncode(customer.toJson());
-    final encodedData = Uri.encodeComponent(jsonString);
-    final uri = Uri.parse('qtapp://customer?data=$encodedData');
+    // The record is already in the shared store; the link only says which one.
+    final uri = Uri.parse('qtapp://customer?id=${Uri.encodeComponent(customer.id)}');
 
     try {
       final launched = await launchUrl(
@@ -68,23 +80,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _goToLt() async {
-    final customer = _customer;
-    if (customer == null) return;
+    if (_customer == null) return;
 
-    final savedCustomers = StorageService.instance.getStoredCustomers();
-    if (savedCustomers.isEmpty) {
-      _showSnackBar(
-        'Store at least one customer before opening LT.',
-        isError: true,
-      );
-      return;
-    }
-
-    final jsonString = jsonEncode(
-      savedCustomers.map((c) => c.toJson()).toList(),
-    );
-    final encodedData = Uri.encodeComponent(jsonString);
-    final uri = Uri.parse('ltapp://customers?data=$encodedData');
+    // LT reads the list out of the shared store, so the link carries nothing.
+    final uri = Uri.parse('ltapp://customers');
 
     try {
       final launched = await launchUrl(
@@ -102,15 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _showSnackBar('Failed to launch LT app: $e', isError: true);
       }
     }
-  }
-
-  void _storeCustomer() {
-    final customer = _customer;
-    if (customer == null) return;
-
-    StorageService.instance.storeCustomer(customer);
-    setState(() => _wasStored = true);
-    _showSnackBar('Customer stored locally via MMKV.');
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
@@ -151,9 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Fetch a customer record from the backend, then '
-                        'forward it to the QT/LT app via a deep link or '
-                        'persist it locally with MMKV.',
+                        'Fetch a customer record from the backend. It is '
+                        'written straight to the shared store, so QT and LT '
+                        'can read it without it travelling in a deep link.',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 16),
@@ -270,19 +260,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: hasCustomer ? _storeCustomer : null,
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text('Store Customers'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
                 ),
               ],
             ],

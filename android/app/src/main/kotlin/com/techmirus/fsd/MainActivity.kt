@@ -1,4 +1,4 @@
-package com.example.fsd
+package com.techmirus.fsd
 
 import io.flutter.embedding.android.FlutterActivity
 

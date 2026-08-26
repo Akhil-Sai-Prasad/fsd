@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.fsd"
+    namespace = "com.techmirus.fsd"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -14,9 +14,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    buildFeatures {
+        // Required so SharedStoreProvider can read BuildConfig.SHARED_STORE_KEY.
+        buildConfig = true
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.fsd"
+        applicationId = "com.techmirus.fsd"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -27,6 +31,14 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // MMKV encryption key for the shared store. Empty locally (store is
+        // written unencrypted); injected in CI via -PSHARED_STORE_KEY=... or
+        // the SHARED_STORE_KEY environment variable. Never commit a real key.
+        val sharedStoreKey = (project.findProperty("SHARED_STORE_KEY") as String?)
+            ?: System.getenv("SHARED_STORE_KEY")
+            ?: ""
+        buildConfigField("String", "SHARED_STORE_KEY", "\"$sharedStoreKey\"")
     }
 
     buildTypes {
@@ -46,4 +58,10 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Backing store for SharedStoreProvider. Only FSD links MMKV — QT and LT
+    // reach the store through the provider and have no MMKV dependency.
+    implementation("com.tencent:mmkv:2.4.2")
 }
